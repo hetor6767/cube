@@ -6,70 +6,82 @@
   <title>Cubo Interactivo 3D</title>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
   <style>
+    body { margin: 0; overflow: hidden; background-color: #121212; }
     .controls {
       position: fixed;
-      bottom: 25px;
+      bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 99999;
       display: flex;
-      gap: 10px;
+      gap: 12px;
     }
     .btn {
       background-color: #007bff;
       color: white;
-      border: 2px solid white;
-      padding: 12px 16px;
+      border: 2px solid #ffffff;
+      padding: 12px 20px;
       border-radius: 8px;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       font-weight: bold;
-      font-size: 14px;
+      font-size: 15px;
       cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
     .btn:active {
-      background-color: #004494;
+      background-color: #0056b3;
     }
   </style>
 </head>
-<body style="margin: 0; background-color: #1a1a1a;">
+<body>
 
-  <!-- Botones de control -->
+  <!-- Botones de Acción -->
   <div class="controls">
-    <button class="btn" onclick="mostrarModelo('entero')">Sólido</button>
-    <button class="btn" onclick="mostrarModelo('aristas')">Aristas</button>
-    <button class="btn" onclick="mostrarModelo('desarmado')">Desarmado</button>
+    <button class="btn" onclick="cambiarVista('entero')">Sólido</button>
+    <button class="btn" onclick="cambiarVista('aristas')">Aristas</button>
+    <button class="btn" onclick="cambiarVista('desarmado')">Desarmado</button>
   </div>
 
-  <a-scene embedded>
-    <!-- Modelos 3D -->
-    <a-assets>
-      <a-asset-item id="m-entero" src="cubo_entero.glb"></a-asset-item>
-      <a-asset-item id="m-aristas" src="cubo_aristas.glb"></a-asset-item>
-      <a-asset-item id="m-desarmado" src="cubo_desarmado.glb"></a-asset-item>
-    </a-assets>
+  <a-scene embedded vr-mode-ui="enabled: false">
+    <!-- Iluminación -->
+    <a-light type="ambient" intensity="1.2"></a-light>
+    <a-light type="directional" position="2 4 3" intensity="1.5"></a-light>
 
     <a-sky color="#1a1a1a"></a-sky>
 
-    <!-- Luces para iluminar los objetos 3D -->
-    <a-light type="ambient" intensity="1.5"></a-light>
-    <a-light type="directional" position="-1 2 1" intensity="1"></a-light>
+    <!-- Cubo 3D en Rotación Continua -->
+    <a-entity position="0 0 -3" animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear">
+      
+      <!-- Estado 1: Cubo Sólido -->
+      <a-entity id="vista-entero" visible="true">
+        <a-box position="0 0 0" scale="1.3 1.3 1.3" material="color: #007bff; metalness: 0.3; roughness: 0.2"></a-box>
+      </a-entity>
 
-    <!-- Contenedor con rotación suave continua -->
-    <a-entity position="0 0 -2.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear">
-      <a-entity id="cubo-entero" gltf-model="#m-entero" scale="1 1 1" visible="true"></a-entity>
-      <a-entity id="cubo-aristas" gltf-model="#m-aristas" scale="1 1 1" visible="false"></a-entity>
-      <a-entity id="cubo-desarmado" gltf-model="#m-desarmado" scale="1 1 1" visible="false"></a-entity>
+      <!-- Estado 2: Aristas (Wireframe / Estructura) -->
+      <a-entity id="vista-aristas" visible="false">
+        <a-box position="0 0 0" scale="1.3 1.3 1.3" material="color: #00ffcc; wireframe: true; wireframeLinewidth: 4"></a-box>
+      </a-entity>
+
+      <!-- Estado 3: Desarmado (Vista Explotada / 6 Caras Separadas) -->
+      <a-entity id="vista-desarmado" visible="false">
+        <a-box position="-0.9 0 0" scale="0.5 0.5 0.5" material="color: #ff4757"></a-box>
+        <a-box position="0.9 0 0" scale="0.5 0.5 0.5" material="color: #ffa502"></a-box>
+        <a-box position="0 0.9 0" scale="0.5 0.5 0.5" material="color: #2ed573"></a-box>
+        <a-box position="0 -0.9 0" scale="0.5 0.5 0.5" material="color: #1e90ff"></a-box>
+        <a-box position="0 0 0.9" scale="0.5 0.5 0.5" material="color: #5352ed"></a-box>
+        <a-box position="0 0 -0.9" scale="0.5 0.5 0.5" material="color: #ff6b81"></a-box>
+      </a-entity>
+
     </a-entity>
 
-    <a-entity camera position="0 0 0"></a-entity>
+    <a-entity camera position="0 0 0" look-controls></a-entity>
   </a-scene>
 
   <script>
-    function mostrarModelo(tipo) {
-      document.getElementById('cubo-entero').setAttribute('visible', tipo === 'entero');
-      document.getElementById('cubo-aristas').setAttribute('visible', tipo === 'aristas');
-      document.getElementById('cubo-desarmado').setAttribute('visible', tipo === 'desarmado');
+    function cambiarVista(tipo) {
+      document.getElementById('vista-entero').setAttribute('visible', tipo === 'entero');
+      document.getElementById('vista-aristas').setAttribute('visible', tipo === 'aristas');
+      document.getElementById('vista-desarmado').setAttribute('visible', tipo === 'desarmado');
     }
   </script>
 </body>
