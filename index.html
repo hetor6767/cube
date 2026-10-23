@@ -3,85 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cubo Interactivo 3D</title>
-  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <title>Visor 3D Interactivo - Cubo</title>
   <style>
-    body { margin: 0; overflow: hidden; background-color: #121212; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Escena 3D */
+    .scene {
+      width: 180px;
+      height: 180px;
+      perspective: 800px;
+      margin-bottom: 60px;
+    }
+
+    .cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: spin 10s infinite linear;
+      transition: transform 0.5s ease;
+    }
+
+    @keyframes spin {
+      from { transform: rotateX(-20deg) rotateY(0deg); }
+      to { transform: rotateX(-20deg) rotateY(360deg); }
+    }
+
+    /* Caras del cubo */
+    .face {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      background: rgba(0, 123, 255, 0.88);
+      border: 2px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+      transition: all 0.6s ease;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    /* Posiciones en estado Sólido */
+    .front  { transform: rotateY(0deg) translateZ(90px); }
+    .back   { transform: rotateY(180deg) translateZ(90px); }
+    .right  { transform: rotateY(90deg) translateZ(90px); }
+    .left   { transform: rotateY(-90deg) translateZ(90px); }
+    .top    { transform: rotateX(90deg) translateZ(90px); }
+    .bottom { transform: rotateX(-90deg) translateZ(90px); }
+
+    /* Estado: Aristas */
+    .cube.aristas .face {
+      background: rgba(0, 255, 204, 0.05) !important;
+      border: 4px solid #00ffcc !important;
+      box-shadow: 0 0 15px #00ffcc;
+      color: #00ffcc;
+    }
+
+    /* Estado: Desarmado (Vista explotada) */
+    .cube.desarmado .front  { transform: rotateY(0deg) translateZ(200px); background: rgba(255, 71, 87, 0.85); }
+    .cube.desarmado .back   { transform: rotateY(180deg) translateZ(200px); background: rgba(255, 165, 2, 0.85); }
+    .cube.desarmado .right  { transform: rotateY(90deg) translateZ(200px); background: rgba(46, 213, 115, 0.85); }
+    .cube.desarmado .left   { transform: rotateY(-90deg) translateZ(200px); background: rgba(30, 144, 255, 0.85); }
+    .cube.desarmado .top    { transform: rotateX(90deg) translateZ(200px); background: rgba(83, 82, 237, 0.85); }
+    .cube.desarmado .bottom { transform: rotateX(-90deg) translateZ(200px); background: rgba(255, 107, 129, 0.85); }
+
+    /* Botonera */
     .controls {
       position: fixed;
       bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 99999;
       display: flex;
-      gap: 12px;
+      gap: 10px;
+      z-index: 100;
     }
+
     .btn {
       background-color: #007bff;
       color: white;
-      border: 2px solid #ffffff;
-      padding: 12px 20px;
+      border: 2px solid white;
+      padding: 12px 18px;
       border-radius: 8px;
-      font-family: Arial, sans-serif;
       font-weight: bold;
-      font-size: 15px;
+      font-size: 14px;
       cursor: pointer;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
-    .btn:active {
-      background-color: #0056b3;
-    }
+
+    .btn:active { background-color: #0056b3; }
   </style>
 </head>
 <body>
 
-  <!-- Botones de Acción -->
-  <div class="controls">
-    <button class="btn" onclick="cambiarVista('entero')">Sólido</button>
-    <button class="btn" onclick="cambiarVista('aristas')">Aristas</button>
-    <button class="btn" onclick="cambiarVista('desarmado')">Desarmado</button>
+  <div class="scene">
+    <div id="cube" class="cube entero">
+      <div class="face front">1</div>
+      <div class="face back">2</div>
+      <div class="face right">3</div>
+      <div class="face left">4</div>
+      <div class="face top">5</div>
+      <div class="face bottom">6</div>
+    </div>
   </div>
 
-  <a-scene embedded vr-mode-ui="enabled: false">
-    <!-- Iluminación -->
-    <a-light type="ambient" intensity="1.2"></a-light>
-    <a-light type="directional" position="2 4 3" intensity="1.5"></a-light>
-
-    <a-sky color="#1a1a1a"></a-sky>
-
-    <!-- Cubo 3D en Rotación Continua -->
-    <a-entity position="0 0 -3" animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear">
-      
-      <!-- Estado 1: Cubo Sólido -->
-      <a-entity id="vista-entero" visible="true">
-        <a-box position="0 0 0" scale="1.3 1.3 1.3" material="color: #007bff; metalness: 0.3; roughness: 0.2"></a-box>
-      </a-entity>
-
-      <!-- Estado 2: Aristas (Wireframe / Estructura) -->
-      <a-entity id="vista-aristas" visible="false">
-        <a-box position="0 0 0" scale="1.3 1.3 1.3" material="color: #00ffcc; wireframe: true; wireframeLinewidth: 4"></a-box>
-      </a-entity>
-
-      <!-- Estado 3: Desarmado (Vista Explotada / 6 Caras Separadas) -->
-      <a-entity id="vista-desarmado" visible="false">
-        <a-box position="-0.9 0 0" scale="0.5 0.5 0.5" material="color: #ff4757"></a-box>
-        <a-box position="0.9 0 0" scale="0.5 0.5 0.5" material="color: #ffa502"></a-box>
-        <a-box position="0 0.9 0" scale="0.5 0.5 0.5" material="color: #2ed573"></a-box>
-        <a-box position="0 -0.9 0" scale="0.5 0.5 0.5" material="color: #1e90ff"></a-box>
-        <a-box position="0 0 0.9" scale="0.5 0.5 0.5" material="color: #5352ed"></a-box>
-        <a-box position="0 0 -0.9" scale="0.5 0.5 0.5" material="color: #ff6b81"></a-box>
-      </a-entity>
-
-    </a-entity>
-
-    <a-entity camera position="0 0 0" look-controls></a-entity>
-  </a-scene>
+  <div class="controls">
+    <button class="btn" onclick="setVista('entero')">Sólido</button>
+    <button class="btn" onclick="setVista('aristas')">Aristas</button>
+    <button class="btn" onclick="setVista('desarmado')">Desarmado</button>
+  </div>
 
   <script>
-    function cambiarVista(tipo) {
-      document.getElementById('vista-entero').setAttribute('visible', tipo === 'entero');
-      document.getElementById('vista-aristas').setAttribute('visible', tipo === 'aristas');
-      document.getElementById('vista-desarmado').setAttribute('visible', tipo === 'desarmado');
+    function setVista(modo) {
+      document.getElementById('cube').className = 'cube ' + modo;
     }
   </script>
 </body>
