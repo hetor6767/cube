@@ -27,10 +27,14 @@
       cursor: pointer;
       box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }
+    .btn:active {
+      background-color: #004494;
+    }
   </style>
 </head>
 <body style="margin: 0; background-color: #1a1a1a;">
 
+  <!-- Botones de control -->
   <div class="controls">
     <button class="btn" onclick="mostrarModelo('entero')">Sólido</button>
     <button class="btn" onclick="mostrarModelo('aristas')">Aristas</button>
@@ -38,20 +42,27 @@
   </div>
 
   <a-scene embedded>
+    <!-- Modelos 3D -->
     <a-assets>
       <a-asset-item id="m-entero" src="cubo_entero.glb"></a-asset-item>
       <a-asset-item id="m-aristas" src="cubo_aristas.glb"></a-asset-item>
       <a-asset-item id="m-desarmado" src="cubo_desarmado.glb"></a-asset-item>
     </a-assets>
 
-    <a-sky color="#222"></a-sky>
+    <a-sky color="#1a1a1a"></a-sky>
 
-    <!-- Modelo 3D editable interactivo en pantalla -->
-    <a-entity id="cubo-entero" gltf-model="#m-entero" scale="1 1 1" position="0 0 -3" visible="true"></a-entity>
-    <a-entity id="cubo-aristas" gltf-model="#m-aristas" scale="1 1 1" position="0 0 -3" visible="false"></a-entity>
-    <a-entity id="cubo-desarmado" gltf-model="#m-desarmado" scale="1 1 1" position="0 0 -3" visible="false"></a-entity>
+    <!-- Luces para iluminar los objetos 3D -->
+    <a-light type="ambient" intensity="1.5"></a-light>
+    <a-light type="directional" position="-1 2 1" intensity="1"></a-light>
 
-    <a-entity camera look-controls orbit-controls="target: 0 0 -3"></a-entity>
+    <!-- Contenedor con rotación suave continua -->
+    <a-entity position="0 0 -2.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear">
+      <a-entity id="cubo-entero" gltf-model="#m-entero" scale="1 1 1" visible="true"></a-entity>
+      <a-entity id="cubo-aristas" gltf-model="#m-aristas" scale="1 1 1" visible="false"></a-entity>
+      <a-entity id="cubo-desarmado" gltf-model="#m-desarmado" scale="1 1 1" visible="false"></a-entity>
+    </a-entity>
+
+    <a-entity camera position="0 0 0"></a-entity>
   </a-scene>
 
   <script>
