@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cubo Interactivo RA</title>
-  <!-- Carga de librerías estables desde CDN jsDelivr -->
+  <title>Cubo Interactivo 3D</title>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
   <style>
     .controls {
       position: fixed;
@@ -29,37 +27,31 @@
       cursor: pointer;
       box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }
-    .btn:active {
-      background-color: #004494;
-    }
   </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body style="margin: 0; background-color: #1a1a1a;">
 
-  <!-- Botones flotantes -->
   <div class="controls">
     <button class="btn" onclick="mostrarModelo('entero')">Sólido</button>
     <button class="btn" onclick="mostrarModelo('aristas')">Aristas</button>
     <button class="btn" onclick="mostrarModelo('desarmado')">Desarmado</button>
   </div>
 
-  <!-- Escena de Realidad Aumentada -->
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    <!-- Carga de modelos 3D -->
+  <a-scene embedded>
     <a-assets>
       <a-asset-item id="m-entero" src="cubo_entero.glb"></a-asset-item>
       <a-asset-item id="m-aristas" src="cubo_aristas.glb"></a-asset-item>
       <a-asset-item id="m-desarmado" src="cubo_desarmado.glb"></a-asset-item>
     </a-assets>
 
-    <!-- Ancla marcador Hiro -->
-    <a-marker preset="hiro">
-      <a-entity id="cubo-entero" gltf-model="#m-entero" scale="0.5 0.5 0.5" position="0 0 0" visible="true"></a-entity>
-      <a-entity id="cubo-aristas" gltf-model="#m-aristas" scale="0.5 0.5 0.5" position="0 0 0" visible="false"></a-entity>
-      <a-entity id="cubo-desarmado" gltf-model="#m-desarmado" scale="0.5 0.5 0.5" position="0 0 0" visible="false"></a-entity>
-    </a-marker>
+    <a-sky color="#222"></a-sky>
 
-    <a-entity camera></a-entity>
+    <!-- Modelo 3D editable interactivo en pantalla -->
+    <a-entity id="cubo-entero" gltf-model="#m-entero" scale="1 1 1" position="0 0 -3" visible="true"></a-entity>
+    <a-entity id="cubo-aristas" gltf-model="#m-aristas" scale="1 1 1" position="0 0 -3" visible="false"></a-entity>
+    <a-entity id="cubo-desarmado" gltf-model="#m-desarmado" scale="1 1 1" position="0 0 -3" visible="false"></a-entity>
+
+    <a-entity camera look-controls orbit-controls="target: 0 0 -3"></a-entity>
   </a-scene>
 
   <script>
