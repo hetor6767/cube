@@ -23,12 +23,13 @@
       position: fixed;
       top: 25px;
       color: #bbbbbb;
-      font-size: 15px;
+      font-size: 14px;
       text-align: center;
       pointer-events: none;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.5);
       padding: 8px 16px;
       border-radius: 20px;
+      line-height: 1.4;
     }
 
     /* Escena 3D */
@@ -44,7 +45,7 @@
       height: 100%;
       position: relative;
       transform-style: preserve-3d;
-      transform: rotateX(-20deg) rotateY(20deg);
+      transform: scale(1) rotateX(-20deg) rotateY(20deg);
       transition: transform 0.05s ease-out;
     }
 
@@ -115,7 +116,10 @@
 </head>
 <body>
 
-  <div class="instruction">👆 Arrastra con el dedo o mouse para girar el cubo</div>
+  <div class="instruction">
+    👆 1 dedo para girar<br>
+    🤌 2 dedos (o rueda del mouse) para zoom
+  </div>
 
   <div class="scene">
     <div id="cube" class="cube entero">
@@ -140,12 +144,21 @@
     let previousPos = { x: 0, y: 0 };
     let rotX = -20;
     let rotY = 20;
+    let scale = 1.0;
+    let initialPinchDistance = null;
+    let initialScale = 1.0;
 
-    function renderRotation() {
-      cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    function renderTransform() {
+      cube.style.transform = `scale(${scale}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
     }
 
-    // Control Mouse
+    function getDistance(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    }
+
+    // Control Mouse - Arrastre
     window.addEventListener('mousedown', (e) => {
       if (e.target.tagName === 'BUTTON') return;
       isDragging = true;
@@ -160,34 +173,65 @@
       rotY += deltaX * 0.7;
       rotX -= deltaY * 0.7;
 
-      renderRotation();
+      renderTransform();
       previousPos = { x: e.clientX, y: e.clientY };
     });
 
     window.addEventListener('mouseup', () => { isDragging = false; });
 
-    // Control Táctil Celular
+    // Control Zoom Mouse (Rueda)
+    window.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        scale = Math.min(scale + 0.1, 2.5);
+      } else {
+        scale = Math.max(scale - 0.1, 0.4);
+      }
+      renderTransform();
+    }, { passive: false });
+
+    // Control Táctil Celular (Giro + Pinch Zoom)
     window.addEventListener('touchstart', (e) => {
       if (e.target.tagName === 'BUTTON') return;
-      isDragging = true;
-      previousPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+
+      if (e.touches.length === 1) {
+        isDragging = true;
+        previousPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        initialPinchDistance = getDistance(e.touches);
+        initialScale = scale;
+      }
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      const deltaX = e.touches[0].clientX - previousPos.x;
-      const deltaY = e.touches[0].clientY - previousPos.y;
+      if (e.touches.length === 1 && isDragging) {
+        const deltaX = e.touches[0].clientX - previousPos.x;
+        const deltaY = e.touches[0].clientY - previousPos.y;
 
-      rotY += deltaX * 0.7;
-      rotX -= deltaY * 0.7;
+        rotY += deltaX * 0.7;
+        rotX -= deltaY * 0.7;
 
-      renderRotation();
-      previousPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        renderTransform();
+        previousPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2 && initialPinchDistance) {
+        const currentDistance = getDistance(e.touches);
+        const factor = currentDistance / initialPinchDistance;
+        scale = Math.min(Math.max(initialScale * factor, 0.4), 2.5);
+        renderTransform();
+      }
     }, { passive: true });
 
-    window.addEventListener('touchend', () => { isDragging = false; });
+    window.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        initialPinchDistance = null;
+      }
+      if (e.touches.length === 0) {
+        isDragging = false;
+      }
+    });
 
-    // Cambiar estados con los botones
+    // Cambiar estados
     function setVista(modo) {
       cube.classList.remove('entero', 'aristas', 'desarmado');
       cube.classList.add(modo);
