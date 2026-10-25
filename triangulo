@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Visor 3D Interactivo - Pirámide</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Menú superior para cambiar de figura */
+    .nav-bar {
+      position: fixed;
+      top: 15px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+      touch-action: auto;
+    }
+    .nav-link {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .nav-link.active {
+      background: #007bff;
+      border-color: #007bff;
+    }
+
+    .instruction {
+      position: fixed;
+      top: 60px;
+      color: #bbbbbb;
+      font-size: 13px;
+      text-align: center;
+      pointer-events: none;
+      background: rgba(0,0,0,0.5);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    /* Escena 3D */
+    .scene {
+      width: 160px;
+      height: 160px;
+      perspective: 800px;
+      margin-bottom: 40px;
+    }
+
+    .pyramid {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: scale(1) rotateX(-20deg) rotateY(25deg);
+      transition: transform 0.05s ease-out;
+    }
+
+    /* Caras */
+    .face {
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      transition: all 0.5s ease;
+    }
+
+    .face svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Posicionamiento Geométrico de la Pirámide */
+    .base {
+      transform: rotateX(-90deg) translateZ(80px);
+    }
+
+    .side-front {
+      transform-origin: bottom center;
+      transform: translateZ(80px) rotateX(30deg);
+    }
+    .side-back {
+      transform-origin: bottom center;
+      transform: translateZ(-80px) rotateY(180deg) rotateX(30deg);
+    }
+    .side-right {
+      transform-origin: bottom center;
+      transform: translateX(80px) rotateY(90deg) rotateX(30deg);
+    }
+    .side-left {
+      transform-origin: bottom center;
+      transform: translateX(-80px) rotateY(-90deg) rotateX(30deg);
+    }
+
+    /* Estilo de Caras según Estado */
+    /* Sólido */
+    .pyramid.entero polygon { fill: rgba(0, 123, 255, 0.88); stroke: #ffffff; stroke-width: 3; }
+    .pyramid.entero rect { fill: rgba(0, 100, 220, 0.9); stroke: #ffffff; stroke-width: 3; }
+
+    /* Aristas (Wireframe) */
+    .pyramid.aristas polygon { fill: rgba(0, 255, 204, 0.05); stroke: #00ffcc; stroke-width: 5; }
+    .pyramid.aristas rect { fill: rgba(0, 255, 204, 0.05); stroke: #00ffcc; stroke-width: 5; }
+
+    /* Desarmado (Vista desplegada plana) */
+    .pyramid.desarmado .side-front { transform: translateZ(80px) rotateX(90deg); }
+    .pyramid.desarmado .side-back  { transform: translateZ(-80px) rotateY(180deg) rotateX(90deg); }
+    .pyramid.desarmado .side-right { transform: translateX(80px) rotateY(90deg) rotateX(90deg); }
+    .pyramid.desarmado .side-left  { transform: translateX(-80px) rotateY(-90deg) rotateX(90deg); }
+
+    .pyramid.desarmado .f1 polygon { fill: rgba(255, 71, 87, 0.85); stroke: #fff; stroke-width: 3; }
+    .pyramid.desarmado .f2 polygon { fill: rgba(255, 165, 2, 0.85); stroke: #fff; stroke-width: 3; }
+    .pyramid.desarmado .f3 polygon { fill: rgba(46, 213, 115, 0.85); stroke: #fff; stroke-width: 3; }
+    .pyramid.desarmado .f4 polygon { fill: rgba(30, 144, 255, 0.85); stroke: #fff; stroke-width: 3; }
+
+    /* Botonera */
+    .controls {
+      position: fixed;
+      bottom: 30px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+      touch-action: auto;
+    }
+
+    .btn {
+      background-color: #007bff;
+      color: white;
+      border: 2px solid white;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .btn:active { background-color: #0056b3; }
+  </style>
+</head>
+<body>
+
+  <!-- Navegación entre figuras -->
+  <div class="nav-bar">
+    <a href="index.html" class="nav-link">📦 Cubo</a>
+    <a href="triangulo.html" class="nav-link active">🔺 Pirámide</a>
+  </div>
+
+  <div class="instruction">
+    👆 1 dedo para girar | 🤌 2 dedos para zoom
+  </div>
+
+  <div class="scene">
+    <div id="pyramid" class="pyramid entero">
+      <!-- Base -->
+      <div class="face base">
+        <svg viewBox="0 0 100 100"><rect x="0" y="0" width="100" height="100"/></svg>
+      </div>
+      <!-- Caras Triangulares -->
+      <div class="face side-front f1">
+        <svg viewBox="0 0 100 100"><polygon points="50,0 0,100 100,100"/></svg>
+      </div>
+      <div class="face side-back f2">
+        <svg viewBox="0 0 100 100"><polygon points="50,0 0,100 100,100"/></svg>
+      </div>
+      <div class="face side-right f3">
+        <svg viewBox="0 0 100 100"><polygon points="50,0 0,100 100,100"/></svg>
+      </div>
+      <div class="face side-left f4">
+        <svg viewBox="0 0 100 100"><polygon points="50,0 0,100 100,100"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" onclick="setVista('entero')">Sólido</button>
+    <button class="btn" onclick="setVista('aristas')">Aristas</button>
+    <button class="btn" onclick="setVista('desarmado')">Desarmado</button>
+  </div>
+
+  <script>
+    const pyramid = document.getElementById('pyramid');
+    let isDragging = false;
+    let previousPos = { x: 0, y: 0 };
+    let rotX = -20;
+    let rotY = 25;
+    let scale = 1.0;
+    let initialPinchDistance = null;
+    let initialScale = 1.0;
+
+    function renderTransform() {
+      pyramid.style.transform = `scale(${scale}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    }
+
+    function getDistance(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    }
+
+    // Eventos Mouse
+    window.addEventListener('mousedown', (e) => {
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+      isDragging = true;
+      previousPos = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      rotY += (e.clientX - previousPos.x) * 0.7;
+      rotX -= (e.clientY - previousPos.y) * 0.7;
+      renderTransform();
+      previousPos = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    window.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      scale = e.deltaY < 0 ? Math.min(scale + 0.1, 2.5) : Math.max(scale - 0.1, 0.4);
+      renderTransform();
+    }, { passive: false });
+
+    // Eventos Táctiles
+    window.addEventListener('touchstart', (e) => {
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+      if (e.touches.length === 1) {
+        isDragging = true;
+        previousPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        initialPinchDistance = getDistance(e.touches);
+        initialScale = scale;
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && isDragging) {
+        rotY += (e.touches[0].clientX - previousPos.x) * 0.7;
+        rotX -= (e.touches[0].clientY - previousPos.y) * 0.7;
+        renderTransform();
+        previousPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2 && initialPinchDistance) {
+        const factor = getDistance(e.touches) / initialPinchDistance;
+        scale = Math.min(Math.max(initialScale * factor, 0.4), 2.5);
+        renderTransform();
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) initialPinchDistance = null;
+      if (e.touches.length === 0) isDragging = false;
+    });
+
+    function setVista(modo) {
+      pyramid.classList.remove('entero', 'aristas', 'desarmado');
+      pyramid.classList.add(modo);
+    }
+  </script>
+</body>
+</html>
